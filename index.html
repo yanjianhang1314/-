@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>小楠今天开心吗？</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Microsoft YaHei", sans-serif;
+}
+body {
+  background: #fff5f7;
+  min-height: 100vh;
+  padding: 20px;
+  overflow: hidden;
+  position: relative;
+}
+/* 主体弹窗 */
+.cat-border {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: 4px solid #ffb6c1;
+  border-radius: 20px;
+  padding: 30px 40px;
+  background: #fff;
+  min-width: 320px;
+  max-width: 500px;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+/* 顶部小圆点装饰 */
+.cat-border::before,
+.cat-border::after {
+  content: "";
+  position: absolute;
+  top: 15px;
+  width: 12px;
+  height: 12px;
+  background: #ffb6c1;
+  border-radius: 50%;
+}
+.cat-border::before { left: 20px; }
+.cat-border::after { right: 20px; }
+.container {
+  text-align: center;
+  display: none;
+}
+/* 初始页默认显示 */
+#page1 {
+  display: block;
+}
+.title {
+  font-size: 26px;
+  color: #e67b8e;
+  margin-bottom: 30px;
+}
+.content-text {
+  font-size: 22px;
+  color: #e67b8e;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+.btn-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+.btn {
+  padding: 14px 30px;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  flex: 1;
+}
+.btn-happy {
+  background: #ffb6c1;
+  color: #fff;
+}
+.btn-unhappy {
+  background: #f0f0f0;
+  color: #666;
+}
+.btn-good {
+  background: #ffb6c1;
+  color: #fff;
+}
+.btn-bad {
+  background: #f0f0f0;
+  color: #666;
+}
+.result-text {
+  font-size: 28px;
+  color: #ff8da1;
+  line-height: 1.8;
+  font-weight: 600;
+}
+/* 移动端适配 */
+@media (max-width: 375px) {
+  .cat-border {
+    padding: 20px 25px;
+    min-width: 280px;
+  }
+  .title {
+    font-size: 22px;
+    margin-bottom: 25px;
+  }
+  .content-text {
+    font-size: 18px;
+  }
+  .btn {
+    padding: 12px 20px;
+    font-size: 16px;
+  }
+  .result-text {
+    font-size: 24px;
+  }
+}
+</style>
+</head>
+<body>
+<!-- 主体弹窗 -->
+<div class="cat-border" id="mainPopup">
+  <!-- 初始页：开心/不开心 -->
+  <div class="container" id="page1">
+    <div class="title">小楠今天开心吗？</div>
+    <div class="btn-row">
+      <button class="btn btn-happy" id="btnHappy">开心</button>
+      <button class="btn btn-unhappy" id="btnUnhappy">不开心</button>
+    </div>
+  </div>
+  <!-- 开心结果页 -->
+  <div class="container" id="page2">
+    <div class="result-text">那我希望小楠永远开心 💖</div>
+  </div>
+  <!-- 第一次安慰页：不开心就来找我聊天 -->
+  <div class="container" id="page3">
+    <div class="content-text">不开心就来找我聊天好吗？</div>
+    <div class="btn-row">
+      <button class="btn btn-good" id="btnGood">好</button>
+      <button class="btn btn-bad" id="btnBad">不好</button>
+    </div>
+  </div>
+  <!-- 好的结果页：快去找受气包叶子聊天 -->
+  <div class="container" id="page4">
+    <div class="result-text">快去找受气包叶子聊天吧 😊</div>
+  </div>
+  <!-- 第二次安慰页：小楠不要不开心了嘛 -->
+  <div class="container" id="page5">
+    <div class="content-text">小楠不要不开心了嘛~</div>
+  </div>
+</div>
+
+<script>
+// 作者：叶子（隐藏标注，不显示在网页）
+const mainPopup = document.getElementById('mainPopup');
+// 页面容器
+const page1 = document.getElementById('page1');
+const page2 = document.getElementById('page2');
+const page3 = document.getElementById('page3');
+const page4 = document.getElementById('page4');
+const page5 = document.getElementById('page5');
+// 按钮
+const btnHappy = document.getElementById('btnHappy');
+const btnUnhappy = document.getElementById('btnUnhappy');
+const btnGood = document.getElementById('btnGood');
+const btnBad = document.getElementById('btnBad');
+
+// 计数：不开心点击次数、不好点击次数
+let unhappyCount = 0;
+let badCount = 0;
+
+// 点击开心 → 显示结果页，3秒后回到初始页
+btnHappy.addEventListener('click', () => {
+  hideAllPages();
+  page2.style.display = 'block';
+  setTimeout(() => {
+    resetToPage1();
+  }, 3000);
+});
+
+// 点击/悬浮“不开心” → 逻辑处理
+btnUnhappy.addEventListener('click', handleUnhappy);
+btnUnhappy.addEventListener('mouseover', movePopup);
+
+// 点击“好” → 显示叶子聊天页，3秒后回到初始页
+btnGood.addEventListener('click', () => {
+  hideAllPages();
+  page4.style.display = 'block';
+  setTimeout(() => {
+    resetToPage1();
+  }, 3000);
+});
+
+// 点击/悬浮“不好” → 逻辑处理
+btnBad.addEventListener('click', handleBad);
+btnBad.addEventListener('mouseover', movePopup);
+
+// 处理“不开心”点击
+function handleUnhappy() {
+  unhappyCount++;
+  if (unhappyCount >= 3) {
+    unhappyCount = 0;
+    hideAllPages();
+    page3.style.display = 'block';
+  } else {
+    movePopup();
+  }
+}
+
+// 处理“不好”点击
+function handleBad() {
+  badCount++;
+  if (badCount >= 3) {
+    badCount = 0;
+    hideAllPages();
+    page5.style.display = 'block';
+    setTimeout(() => {
+      resetToPage1();
+    }, 3000);
+  } else {
+    movePopup();
+  }
+}
+
+// 隐藏所有页面
+function hideAllPages() {
+  [page1, page2, page3, page4, page5].forEach(page => {
+    page.style.display = 'none';
+  });
+}
+
+// 移动弹窗（限制在屏幕内）
+function movePopup() {
+  const popupWidth = mainPopup.offsetWidth;
+  const popupHeight = mainPopup.offsetHeight;
+  const maxX = window.innerWidth - popupWidth - 20;
+  const maxY = window.innerHeight - popupHeight - 20;
+  const randomX = Math.max(20, Math.floor(Math.random() * maxX));
+  const randomY = Math.max(20, Math.floor(Math.random() * maxY));
+  
+  mainPopup.style.left = `${randomX}px`;
+  mainPopup.style.top = `${randomY}px`;
+  mainPopup.style.transform = 'none';
+}
+
+// 重置到初始页（包含位置重置）
+function resetToPage1() {
+  hideAllPages();
+  page1.style.display = 'block';
+  mainPopup.style.left = '50%';
+  mainPopup.style.top = '50%';
+  mainPopup.style.transform = 'translate(-50%, -50%)';
+}
+</script>
+<!-- 作者标注：仅存在于代码中，网页不显示 -->
+<!-- 作者：叶子 -->
+</body>
+</html>
